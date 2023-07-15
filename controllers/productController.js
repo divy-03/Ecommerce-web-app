@@ -1,5 +1,4 @@
 const Product = require("../models/productModel");
-const ErrorHandler = require("../utils/errorHandler");
 
 // Create Product --- ADMIN
 exports.createProduct = async (req, res, next) => {
@@ -22,15 +21,17 @@ exports.getProductDetails = async (req, res, next) => {
   const product = await Product.findById(req.params.id);
 
   if (!product) {
-    return next(new ErrorHandler("Product not found", 404));
+    return res.status(500).json({
+      success: false,
+      message: "Product not found",
+    });
   }
 
-  res.status(200).json({
+  await res.status(200).json({
     success: true,
     product,
   });
 };
-
 // Update Product --- ADMIN
 exports.updateProduct = async (req, res) => {
   let product = await Product.findById(req.params.id);
