@@ -29,6 +29,7 @@ exports.createProduct = async (req, res, next) => {
 // Get all Products
 exports.getAllProducts = async (req, res) => {
   const resultPerPage = process.env.resultPerPage;
+  const productCount = await Product.countDocuments();
 
   try {
     const apiFeature = new Features(Product.find(), req.query)
@@ -38,7 +39,7 @@ exports.getAllProducts = async (req, res) => {
 
     const products = await apiFeature.query;
 
-    res.status(200).json({ success: true, products });
+    res.status(200).json({ success: true, products, productCount });
   } catch (error) {
     if (error.name === "CastError") {
       const message = `Resource not found. Invalid: ${error.path}`;
