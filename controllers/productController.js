@@ -1,4 +1,5 @@
 const Product = require("../models/productModel");
+const Features = require("../utils/features");
 // const ErrorHandler = require("../utils/errorHandler");
 // const catchAsyncError = require("../middleware/catchAsyncError");
 
@@ -12,17 +13,30 @@ exports.createProduct = async (req, res, next) => {
       product,
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    if (error.name === "CastError") {
+      const message = `Resource not found. Invalid: ${error.path}`;
+      res.status(400).json({ success: false, error: message });
+    } else {
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 };
 
 // Get all Products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const apiFeature = new Features(Product.find(), req.query).search();
+
+    const products = await apiFeature.query;
+
     res.status(200).json({ success: true, products });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    if (error.name === "CastError") {
+      const message = `Resource not found. Invalid: ${error.path}`;
+      res.status(400).json({ success: false, error: message });
+    } else {
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 };
 
@@ -42,7 +56,12 @@ exports.getProductDetails = async (req, res, next) => {
       product,
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    if (error.name === "CastError") {
+      const message = `Resource not found. Invalid: ${error.path}`;
+      res.status(400).json({ success: false, error: message });
+    } else {
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 };
 
@@ -68,7 +87,12 @@ exports.updateProduct = async (req, res) => {
       product,
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    if (error.name === "CastError") {
+      const message = `Resource not found. Invalid: ${error.path}`;
+      res.status(400).json({ success: false, error: message });
+    } else {
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 };
 
@@ -89,6 +113,11 @@ exports.deleteProduct = async (req, res, next) => {
       message: "Product deleted successfully",
     });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    if (error.name === "CastError") {
+      const message = `Resource not found. Invalid: ${error.path}`;
+      res.status(400).json({ success: false, error: message });
+    } else {
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 };
