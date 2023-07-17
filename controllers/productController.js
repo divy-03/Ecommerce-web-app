@@ -1,7 +1,11 @@
 const Product = require("../models/productModel");
 const Features = require("../utils/features");
+const dotenv = require("dotenv");
 // const ErrorHandler = require("../utils/errorHandler");
 // const catchAsyncError = require("../middleware/catchAsyncError");
+
+//Importing config file
+dotenv.config({ path: "backend/config/config.env" });
 
 // Create Product --- ADMIN
 exports.createProduct = async (req, res, next) => {
@@ -24,7 +28,7 @@ exports.createProduct = async (req, res, next) => {
 
 // Get all Products
 exports.getAllProducts = async (req, res) => {
-  const resultPerPage = 2;
+  const resultPerPage = process.env.resultPerPage;
 
   try {
     const apiFeature = new Features(Product.find(), req.query)
