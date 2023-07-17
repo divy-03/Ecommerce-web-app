@@ -22,21 +22,24 @@ class Features {
   // Filter category feature for Get Products API
   filter() {
     const queryCopy = { ...this.queryStr };
-  
+
     // Remove some fields for category
     const removeFields = ["keyword", "page", "limit"];
-  
+
     removeFields.forEach((key) => delete queryCopy[key]);
-  
+
     // Convert values to case-insensitive regex
-    Object.keys(queryCopy).forEach((key) => {
-      queryCopy[key] = { $regex: new RegExp(queryCopy[key], "i") };
-    });
-    
-    this.query = this.query.find(queryCopy);
+    // Object.keys(queryCopy).forEach((key) => {
+    //   queryCopy[key] = { $regex: new RegExp(queryCopy[key], "i") };
+    // });
+
+    // Filter for Price and Rating range
+    let queryStr = JSON.stringify(queryCopy);
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte)\b/g, (key) => `$${key}`);
+
+    this.query = this.query.find(JSON.parse(queryStr));
     return this;
   }
-  
 }
 
 module.exports = Features;
