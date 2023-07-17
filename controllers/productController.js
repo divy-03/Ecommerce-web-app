@@ -24,8 +24,13 @@ exports.createProduct = async (req, res, next) => {
 
 // Get all Products
 exports.getAllProducts = async (req, res) => {
+  const resultPerPage = 2;
+
   try {
-    const apiFeature = new Features(Product.find(), req.query).search().filter();
+    const apiFeature = new Features(Product.find(), req.query)
+      .search()
+      .filter()
+      .pagination(resultPerPage);
 
     const products = await apiFeature.query;
 
