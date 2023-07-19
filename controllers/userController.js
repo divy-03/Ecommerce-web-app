@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const dotenv = require("dotenv");
 const sendToken = require("../utils/jwtToken");
+const resError = require("../utils/resError");
+const resSuccess = require("../utils/resSuccess");
 
 dotenv.config({ path: "backend/config/config.env" });
 
@@ -25,7 +27,6 @@ exports.registerUser = async (req, res, next) => {
     });
 
     sendToken(user, 201, res);
-
   } catch (error) {
     if (error.code === 11000) {
       const message = `email: ${error.keyValue.email} is already registered with us`;
@@ -36,6 +37,7 @@ exports.registerUser = async (req, res, next) => {
   }
 };
 
+// Login User
 exports.loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -60,10 +62,7 @@ exports.loginUser = async (req, res, next) => {
       const passwordCompare = await bcrypt.compare(password, savedPassword);
 
       if (!passwordCompare) {
-        return res.status(401).json({
-          success: false,
-          error: "password not matched",
-        });
+        resError(401, "password not matched", res);
       } else {
         // console.log(user.id, user._id);
         sendToken(user, 200, res);
@@ -73,4 +72,16 @@ exports.loginUser = async (req, res, next) => {
     res.status(500).send(error);
     console.log(error);
   }
+};
+
+// LogOut User
+exports.logoutUser = async (req, res, next) => {
+  try {
+    res.cookie("authToken", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+    });
+
+    resSuccess(200, "Logged Out Successfully", res);
+  } catch (error) {}
 };
