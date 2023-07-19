@@ -1,13 +1,14 @@
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
 const resError = require("../utils/resError");
-require("dotenv").config(); // Load environment variables from .env file, if present.
+const dotenv = require("dotenv");
+dotenv.config({ path: "backend/config/config.env" });
 
 exports.fetchUser = async (req, res, next) => {
   const { authToken } = req.cookies;
 
   if (!authToken) {
-    resError(401, "Please authenticate using a valid token", res);
+    return resError(401, "Please authenticate using a valid token", res);
   }
 
   try {
@@ -17,22 +18,16 @@ exports.fetchUser = async (req, res, next) => {
 
     next();
   } catch (error) {
-    resError(401, "Please authenticate using valid token");
+    resError(401, "Please authenticate using valid token", res);
   }
 };
 
 exports.authRole = (...roles) => {
   return (req, res, next) => {
-
     if (!roles.includes(req.user.role)) {
       return resError(
-        403,
-        `Role: ${req.user.role} is not allowed to access this resource`,
-        res
-      );
+        403, `Role: ${req.user.role} is not allowed to access this resource`, res);
     }
     next();
   };
 };
-
-
