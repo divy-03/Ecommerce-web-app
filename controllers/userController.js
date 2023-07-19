@@ -1,30 +1,76 @@
 const User = require("../models/userModel");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { check, validationResult } = require("express-validator");
+const dotenv = require("dotenv");
+const sendToken = require("../utils/jwtToken");
+
+dotenv.config({ path: "backend/config/config.env" });
 
 // Register a user
 exports.registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const secPass = await bcrypt.hash(password, salt);
 
     const user = await User.create({
       name,
       email,
-      password,
+      password: secPass,
       avatar: {
         public_id: "This is a sample id",
         url: "profilePictureUrl",
       },
     });
 
-    res.status(201).json({
-      success: true,
-      user,
-    });
+    sendToken(user, 201, res);
+
   } catch (error) {
-    if (error.name === "CastError") {
-      const message = `Resource not found. Invalid: ${error.path}`;
+    if (error.code === 11000) {
+      const message = `email: ${error.keyValue.email} is already registered with us`;
       res.status(400).json({ success: false, error: message });
     } else {
       res.status(400).json({ success: false, error: error.message });
     }
+  }
+};
+
+exports.loginUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate email and password
+    await check("email", "Please enter a valid email").isEmail().run(req);
+    await check("password", "Please enter a password").notEmpty().run(req);
+
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    } else {
+      const user = await User.findOne({ email }).select("+password");
+
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or passsword" });
+      }
+
+      const savedPassword = user.password;
+
+      const passwordCompare = await bcrypt.compare(password, savedPassword);
+
+      if (!passwordCompare) {
+        return res.status(401).json({
+          success: false,
+          error: "password not matched",
+        });
+      } else {
+        // console.log(user.id, user._id);
+        sendToken(user, 200, res);
+      }
+    }
+  } catch (error) {
+    res.status(500).send(error);
+    console.log(error);
   }
 };
