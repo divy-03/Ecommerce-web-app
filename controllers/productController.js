@@ -1,6 +1,9 @@
 const Product = require("../models/productModel");
 const Features = require("../utils/features");
 const dotenv = require("dotenv");
+const resSuccess = require("../utils/resSuccess");
+const resError = require("../utils/resError");
+const castError = require("../utils/castError");
 // const ErrorHandler = require("../utils/errorHandler");
 // const catchAsyncError = require("../middleware/catchAsyncError");
 
@@ -12,17 +15,12 @@ exports.createProduct = async (req, res, next) => {
   try {
     const product = await Product.create(req.body);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       product,
     });
   } catch (error) {
-    if (error.name === "CastError") {
-      const message = `Resource not found. Invalid: ${error.path}`;
-      res.status(400).json({ success: false, error: message });
-    } else {
-      res.status(400).json({ success: false, error: error.message });
-    }
+    castError(error, res);
   }
 };
 
@@ -41,12 +39,7 @@ exports.getAllProducts = async (req, res) => {
 
     res.status(200).json({ success: true, products, productCount });
   } catch (error) {
-    if (error.name === "CastError") {
-      const message = `Resource not found. Invalid: ${error.path}`;
-      res.status(400).json({ success: false, error: message });
-    } else {
-      res.status(400).json({ success: false, error: error.message });
-    }
+    castError(error, res);
   }
 };
 
@@ -55,10 +48,7 @@ exports.getProductDetails = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(500).json({
-        success: false,
-        message: "Product not found",
-      });
+      resError(500, "Product not found", res);
     }
 
     await res.status(200).json({
@@ -66,12 +56,7 @@ exports.getProductDetails = async (req, res, next) => {
       product,
     });
   } catch (error) {
-    if (error.name === "CastError") {
-      const message = `Resource not found. Invalid: ${error.path}`;
-      res.status(400).json({ success: false, error: message });
-    } else {
-      res.status(400).json({ success: false, error: error.message });
-    }
+    castError(error, res);
   }
 };
 
@@ -80,10 +65,7 @@ exports.updateProduct = async (req, res) => {
   try {
     let product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(500).json({
-        success: false,
-        message: "Product not found",
-      });
+      resError(500, "Product not found", res);
     }
 
     product = await Product.findByIdAndUpdate(req.params.id, req.body, {
@@ -97,12 +79,7 @@ exports.updateProduct = async (req, res) => {
       product,
     });
   } catch (error) {
-    if (error.name === "CastError") {
-      const message = `Resource not found. Invalid: ${error.path}`;
-      res.status(400).json({ success: false, error: message });
-    } else {
-      res.status(400).json({ success: false, error: error.message });
-    }
+    castError(error, res);
   }
 };
 
@@ -111,23 +88,12 @@ exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
-      return res.status(500).json({
-        success: false,
-        message: "Product not found",
-      });
+      resError(500, "Product not found", res);
     }
     await product.deleteOne();
 
-    res.status(200).json({
-      success: true,
-      message: "Product deleted successfully",
-    });
+    resSuccess(200, "Product deleted successfully", res);
   } catch (error) {
-    if (error.name === "CastError") {
-      const message = `Resource not found. Invalid: ${error.path}`;
-      res.status(400).json({ success: false, error: message });
-    } else {
-      res.status(400).json({ success: false, error: error.message });
-    }
+    castError(error, res);
   }
 };

@@ -1,6 +1,5 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const { check, validationResult } = require("express-validator");
 const dotenv = require("dotenv");
 const sendToken = require("../utils/jwtToken");
@@ -29,10 +28,9 @@ exports.registerUser = async (req, res, next) => {
     sendToken(user, 201, res);
   } catch (error) {
     if (error.code === 11000) {
-      const message = `email: ${error.keyValue.email} is already registered with us`;
-      res.status(400).json({ success: false, error: message });
+      resError(400, "email already registered", res);
     } else {
-      res.status(400).json({ success: false, error: error.message });
+      resError(400, error.message, res);
     }
   }
 };
@@ -49,12 +47,12 @@ exports.loginUser = async (req, res, next) => {
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
+      resError(400, errors.array(), res);
     } else {
       const user = await User.findOne({ email }).select("+password");
 
       if (!user) {
-        return res.status(401).json({ error: "Invalid email or passsword" });
+        resError(401, "Invalid email or passsword", res);
       }
 
       const savedPassword = user.password;
@@ -64,13 +62,11 @@ exports.loginUser = async (req, res, next) => {
       if (!passwordCompare) {
         resError(401, "password not matched", res);
       } else {
-        // console.log(user.id, user._id);
         sendToken(user, 200, res);
       }
     }
   } catch (error) {
-    res.status(500).send(error);
-    console.log(error);
+    resError(500, error, res);
   }
 };
 
@@ -83,5 +79,7 @@ exports.logoutUser = async (req, res, next) => {
     });
 
     resSuccess(200, "Logged Out Successfully", res);
-  } catch (error) {}
+  } catch (error) {
+    resError(500, error, res);
+  }
 };
