@@ -13,6 +13,7 @@ dotenv.config({ path: "backend/config/config.env" });
 // Create Product --- ADMIN
 exports.createProduct = async (req, res, next) => {
   try {
+    req.body.user = req.user.id;
     const product = await Product.create(req.body);
 
     return res.status(201).json({
