@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { check, validationResult } = require("express-validator");
 const dotenv = require("dotenv");
+const crypto = require("crypto");
 const sendToken = require("../utils/jwtToken");
 const resError = require("../utils/resError");
 const resSuccess = require("../utils/resSuccess");
@@ -111,16 +112,13 @@ exports.forgotPassword = async (req, res, next) => {
         email: user.email,
         subject: "Ecommerce Website Password Recovery",
         message: message,
-        html: `  <div
-        style="background-image: linear-gradient(to right bottom, #ae95ffab 40%, rgb(210, 103, 117, 0.4)); margin:0;">
-        <h1 style="color: #333; margin-left: 10px;">Password Reset Link</h1>
-        <p style="font-size: 16px; margin-left:20px;">Click this link below to reset your password of Ecommerce Website</p>
-        <a href="${resetPasswordUrl}" style="text-decoration: none; background: black; color: white; border-radius: 8px; padding: 10px; text-align: center; width: 80px; margin-left: 50px;
-       transition: background 0.3s;" onmouseover="this.style.background='rgb(45 45 45)'"
-          onmouseout="this.style.background='black'">Click Here!</a>
-        <p style="font-size: 16px; margin-left:20px;">If you didn't requested to reset password then please ignore this mail
-        </p>
-      </div>`,
+        html: `<div style="background-image: linear-gradient(to right bottom, #ae95ffab 40%, rgb(210, 103, 117, 0.4)); margin:0;">
+                    <h1 style="color: #333; margin-left: 10px;">Password Reset Link</h1>
+                    <p style="font-size: 16px; margin-left:20px;">Click this link below to reset your password of Ecommerce Website</p>
+                    <a href="${resetPasswordUrl}" style="text-decoration: none; background: black; color: white; border-radius: 8px; padding: 10px; text-align: center; width: 80px; margin-left: 50px; transition: background 0.3s;" onmouseover="this.style.background='rgb(45 45 45)'"
+                    onmouseout="this.style.background='black'">Click Here!</a>
+                    <p style="font-size: 16px; margin-left:20px;">If you didn't requested to reset password then please ignore this mail</p>
+              </div>`,
       });
 
       resSuccess(200, `Email sent to ${user.email}`, res);
@@ -135,4 +133,34 @@ exports.forgotPassword = async (req, res, next) => {
   } catch (error) {
     resError(500, error, res);
   }
+};
+
+// Reset Password
+exports.resetPassword = async (req, res, next) => {
+  // Creating token hash
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.parmas.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return resError(404, "Reset Password Link is invalid or expired", res);
+  }
+
+  if (req.body.password !== req.bodyconfirmPassword) {
+    return resError(400, "Password does not match", res);
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordExpire = undefined;
+  user.resetPasswordToken = undefined;
+
+  await user.save();
+
+  sendToken(user, 200, res);
 };
