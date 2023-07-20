@@ -217,3 +217,25 @@ exports.updatePassword = async (req, res, next) => {
     resError(500, "Some Internal error occured while changing password", res);
   }
 };
+
+// Update user profile
+exports.updateProfile = async (req, res) => {
+  try {
+    const newUserData = {
+      name: req.body.name,
+      email: req.body.email,
+    };
+
+    // TODO: add cloudinary later for avatar image
+
+    const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    resSuccess(200, "Profile updated successfully", res);
+  } catch (error) {
+    resError(500, "Some internal error occured in updating profile");
+  }
+};
