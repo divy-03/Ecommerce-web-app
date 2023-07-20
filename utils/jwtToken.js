@@ -20,6 +20,7 @@ const sendToken = (user, statusCode, res) => {
   return res.status(statusCode).cookie("authToken", authToken, options).json({
     success: true,
     authToken,
+    user,
   });
 };
 

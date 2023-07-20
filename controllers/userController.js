@@ -140,7 +140,7 @@ exports.resetPassword = async (req, res, next) => {
   // Creating token hash
   const resetPasswordToken = crypto
     .createHash("sha256")
-    .update(req.parmas.token)
+    .update(req.params.token)
     .digest("hex");
 
   const user = await User.findOne({
@@ -152,11 +152,15 @@ exports.resetPassword = async (req, res, next) => {
     return resError(404, "Reset Password Link is invalid or expired", res);
   }
 
-  if (req.body.password !== req.bodyconfirmPassword) {
+  if (req.body.password !== req.body.confirmPassword) {
     return resError(400, "Password does not match", res);
   }
 
-  user.password = req.body.password;
+  const salt = await bcrypt.genSalt(10);
+  const secPass = await bcrypt.hash(req.body.password, salt);
+
+  user.password = secPass;
+  console.log(user.password);
   user.resetPasswordExpire = undefined;
   user.resetPasswordToken = undefined;
 
