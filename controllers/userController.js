@@ -137,36 +137,40 @@ exports.forgotPassword = async (req, res, next) => {
 
 // Reset Password
 exports.resetPassword = async (req, res, next) => {
-  // Creating token hash
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
+  try {
+    // Creating token hash
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
-  });
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
 
-  if (!user) {
-    return resError(404, "Reset Password Link is invalid or expired", res);
+    if (!user) {
+      return resError(404, "Reset Password Link is invalid or expired", res);
+    }
+
+    if (req.body.password !== req.body.confirmPassword) {
+      return resError(400, "Password does not match", res);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const secPass = await bcrypt.hash(req.body.password, salt);
+
+    user.password = secPass;
+
+    user.resetPasswordExpire = undefined;
+    user.resetPasswordToken = undefined;
+
+    await user.save();
+
+    sendToken(user, 200, res);
+  } catch (error) {
+    resError(500, "Some internal error occured while resetting password");
   }
-
-  if (req.body.password !== req.body.confirmPassword) {
-    return resError(400, "Password does not match", res);
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  const secPass = await bcrypt.hash(req.body.password, salt);
-
-  user.password = secPass;
-  console.log(user.password);
-  user.resetPasswordExpire = undefined;
-  user.resetPasswordToken = undefined;
-
-  await user.save();
-
-  sendToken(user, 200, res);
 };
 
 // Get User Detail
@@ -177,8 +181,39 @@ exports.getUserDetails = async (req, res, next) => {
     res.status(200).json({
       success: true,
       user,
-    })
+    });
   } catch (error) {
     resError(500, error, res);
+  }
+};
+
+// Update user password
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const user = await User.findOne(req.user._id).select("+password");
+
+    const passwordCompare = await bcrypt.compare(
+      req.body.oldPassword,
+      user.password
+    );
+
+    if (!passwordCompare) {
+      return resError(401, "password not matched", res);
+    }
+
+    if (req.body.newPassword !== req.body.confirmPassword) {
+      return resError(401, "New password not matched", res);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const secPass = await bcrypt.hash(req.body.newPassword, salt);
+
+    user.password = secPass;
+
+    await user.save();
+
+    sendToken(user, 200, res);
+  } catch (error) {
+    resError(500, "Some Internal error occured while changing password", res);
   }
 };
