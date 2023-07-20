@@ -168,3 +168,18 @@ exports.resetPassword = async (req, res, next) => {
 
   sendToken(user, 200, res);
 };
+
+// Get User Detail
+exports.getUserDetails = async (req, res, next) => {
+  try {
+    const user = await User.findOne(req.user.id);
+
+    if (!user) {
+      resError(404, "User not found", res);
+    }
+
+    resSuccess(200, user, res);
+  } catch (error) {
+    resError(500, error, res);
+  }
+};
