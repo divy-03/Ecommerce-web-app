@@ -111,7 +111,16 @@ exports.forgotPassword = async (req, res, next) => {
         email: user.email,
         subject: "Ecommerce Website Password Recovery",
         message: message,
-        html: `<h1 style="color: #333;">Password Reset Link</h1><p style="font-size: 16px;">Click this link below to reset your password of Ecommerce Website</p> <a href="${resetPasswordUrl}">Click Here!</a><p>If you didn't requested to reset password then please ignore this mail</p> `,
+        html: `  <div
+        style="background-image: linear-gradient(to right bottom, #ae95ffab 40%, rgb(210, 103, 117, 0.4)); margin:0;">
+        <h1 style="color: #333; margin-left: 10px;">Password Reset Link</h1>
+        <p style="font-size: 16px; margin-left:20px;">Click this link below to reset your password of Ecommerce Website</p>
+        <a href="${resetPasswordUrl}" style="text-decoration: none; background: black; color: white; border-radius: 8px; padding: 10px; text-align: center; width: 80px; margin-left: 50px;
+       transition: background 0.3s;" onmouseover="this.style.background='rgb(45 45 45)'"
+          onmouseout="this.style.background='black'">Click Here!</a>
+        <p style="font-size: 16px; margin-left:20px;">If you didn't requested to reset password then please ignore this mail
+        </p>
+      </div>`,
       });
 
       resSuccess(200, `Email sent to ${user.email}`, res);
