@@ -10,6 +10,7 @@ const {
   updateProfile,
   getAllUser,
   getUser,
+  editUserRole,
 } = require("../controllers/userController");
 const { fetchUser, authRole } = require("../middleware/auth");
 const router = express.Router();
@@ -22,7 +23,8 @@ router.route("/auth/logout").get(fetchUser, logoutUser);
 router.route("/me").get(fetchUser, getUserDetails);
 router.route("/password/update").put(fetchUser, updatePassword);
 router.route("/me/update").put(fetchUser, updateProfile);
-router.route("/admin/users").get(fetchUser, authRole("admin"), getAllUser);
-router.route("/admin/user/:id").get(fetchUser, authRole("admin"), getUser);
+router.route("/admin/users").get(fetchUser, authRole("admin", "owner"), getAllUser);
+router.route("/admin/user/:id").get(fetchUser, authRole("admin", "owner"), getUser);
+router.route("/admin/user/:id").put(fetchUser, authRole("owner"), editUserRole);
 
 module.exports = router;

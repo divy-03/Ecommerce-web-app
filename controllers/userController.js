@@ -270,3 +270,50 @@ exports.getUser = async (req, res) => {
     resError(500, `${error} occured while getting user`, res);
   }
 };
+
+// Edit User Profile and role --- ADMIN
+exports.editUserRole = async (req, res) => {
+  try {
+    const newUserData = {
+      name: req.body.name,
+      email: req.body.email,
+      role: req.body.role,
+    };
+
+    const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+      new: true,
+      runValidators: true,
+      userFindAndModify: false,
+    });
+
+    if (!user) {
+      return resError(404, "User not found", res);
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    return resError(500, `${error} occured while changing role`);
+  }
+};
+
+// Delete User --- ADMIN
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    // TODO: remove cloudinary later
+
+    if (!user) {
+      return resError(404, `User not found with id: ${req.params.id}`);
+    }
+
+    await user.remove();
+
+    resSuccess(200, `User with id: ${req.params.id} deleted successfully`, res);
+  } catch (error) {
+    resError(500, `${error} occured while deleting user`, res);
+  }
+};
