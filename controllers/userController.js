@@ -256,10 +256,10 @@ exports.getAllUser = async (req, res) => {
 // Get Single User Information --- ADMIN
 exports.getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params._id);
+    const user = await User.findById(req.params.id);
 
     if (!user) {
-      return resError(404, `User not found with id: ${req.params._id}`);
+      return resError(404, `User not found with id: ${req.params.id}`);
     }
 
     return res.status(200).json({
