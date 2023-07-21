@@ -11,6 +11,7 @@ const {
   getAllUser,
   getUser,
   editUserRole,
+  deleteUser,
 } = require("../controllers/userController");
 const { fetchUser, authRole } = require("../middleware/auth");
 const router = express.Router();
@@ -26,5 +27,6 @@ router.route("/me/update").put(fetchUser, updateProfile);
 router.route("/admin/users").get(fetchUser, authRole("admin", "owner"), getAllUser);
 router.route("/admin/user/:id").get(fetchUser, authRole("admin", "owner"), getUser);
 router.route("/admin/user/:id").put(fetchUser, authRole("owner"), editUserRole);
+router.route("/admin/user/:id").delete(fetchUser, authRole("owner", "admin"), deleteUser);
 
 module.exports = router;

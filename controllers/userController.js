@@ -310,7 +310,7 @@ exports.deleteUser = async (req, res) => {
       return resError(404, `User not found with id: ${req.params.id}`);
     }
 
-    await user.remove();
+    await user.deleteOne();
 
     resSuccess(200, `User with id: ${req.params.id} deleted successfully`, res);
   } catch (error) {
