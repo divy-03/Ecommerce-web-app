@@ -21,7 +21,7 @@ exports.createProduct = async (req, res, next) => {
       product,
     });
   } catch (error) {
-    castError(error, res);
+    return castError(error, res);
   }
 };
 
@@ -49,7 +49,7 @@ exports.getProductDetails = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
-      resError(500, "Product not found", res);
+      return  resError(500, "Product not found", res);
     }
 
     await res.status(200).json({
@@ -66,7 +66,7 @@ exports.updateProduct = async (req, res) => {
   try {
     let product = await Product.findById(req.params.id);
     if (!product) {
-      resError(500, "Product not found", res);
+      return resError(500, "Product not found", res);
     }
 
     product = await Product.findByIdAndUpdate(req.params.id, req.body, {
@@ -89,11 +89,11 @@ exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
-      resError(500, "Product not found", res);
+      return resError(500, "Product not found", res);
     }
     await product.deleteOne();
 
-    resSuccess(200, "Product deleted successfully", res);
+    return resSuccess(200, "Product deleted successfully", res);
   } catch (error) {
     castError(error, res);
   }

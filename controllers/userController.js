@@ -27,12 +27,12 @@ exports.registerUser = async (req, res, next) => {
       },
     });
 
-    sendToken(user, 201, res);
+    return sendToken(user, 201, res);
   } catch (error) {
     if (error.code === 11000) {
-      resError(400, "email already registered", res);
+      return resError(400, "email already registered", res);
     } else {
-      resError(400, error.message, res);
+      return resError(400, error.message, res);
     }
   }
 };
@@ -49,12 +49,12 @@ exports.loginUser = async (req, res, next) => {
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      resError(400, errors.array(), res);
+      return resError(400, errors.array(), res);
     } else {
       const user = await User.findOne({ email }).select("+password");
 
       if (!user) {
-        resError(401, "Invalid email or passsword", res);
+        return resError(401, "Invalid email or passsword", res);
       }
 
       const savedPassword = user.password;
@@ -62,9 +62,9 @@ exports.loginUser = async (req, res, next) => {
       const passwordCompare = await bcrypt.compare(password, savedPassword);
 
       if (!passwordCompare) {
-        resError(401, "password not matched", res);
+        return resError(401, "password not matched", res);
       } else {
-        sendToken(user, 200, res);
+        return sendToken(user, 200, res);
       }
     }
   } catch (error) {
@@ -169,7 +169,7 @@ exports.resetPassword = async (req, res, next) => {
 
     sendToken(user, 200, res);
   } catch (error) {
-    resError(500, "Some internal error occured while resetting password");
+    resError(500, `${error} occured while resetting password`, res);
   }
 };
 
@@ -178,7 +178,7 @@ exports.getUserDetails = async (req, res, next) => {
   try {
     const user = await User.findOne(req.user._id);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       user,
     });
@@ -212,9 +212,9 @@ exports.updatePassword = async (req, res, next) => {
 
     await user.save();
 
-    sendToken(user, 200, res);
+    return sendToken(user, 200, res);
   } catch (error) {
-    resError(500, "Some Internal error occured while changing password", res);
+    resError(500, `${error} occured while changing password`, res);
   }
 };
 
@@ -236,6 +236,37 @@ exports.updateProfile = async (req, res) => {
 
     resSuccess(200, "Profile updated successfully", res);
   } catch (error) {
-    resError(500, "Some internal error occured in updating profile");
+    resError(500, `${error} occured in updating profile`, res);
+  }
+};
+
+// Get All Users --- ADMIN
+exports.getAllUser = async (req, res) => {
+  try {
+    const users = await User.find();
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    resError(500, `${error} occured while getting all users`, res);
+  }
+};
+
+// Get Single User Information --- ADMIN
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params._id);
+
+    if (!user) {
+      return resError(404, `User not found with id: ${req.params._id}`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    resError(500, `${error} occured while getting user`, res);
   }
 };
