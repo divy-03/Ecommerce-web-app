@@ -1,7 +1,8 @@
 const Order = require("../models/orderModel");
-// const Product = require("../models/productModel");
-// const resSuccess = require("../utils/resSuccess");
+const Product = require("../models/productModel");
+const resSuccess = require("../utils/resSuccess");
 const resError = require("../utils/resError");
+const updateStock = require("../utils/updateStock");
 
 // Create a new Order
 exports.newOrder = async (req, res) => {
@@ -39,7 +40,6 @@ exports.newOrder = async (req, res) => {
   }
 };
 
-
 // Get all my Order
 exports.myOrders = async (req, res) => {
   try {
@@ -68,7 +68,7 @@ exports.getMyOrder = async (req, res) => {
     const userId = req.user.id;
 
     // Find the order by both its ID and the current user ID
-    const order = await Order.findOne({ _id: orderId, user: userId })
+    const order = await Order.findOne({ _id: orderId, user: userId });
     if (!order) {
       return resError(404, "Order not found", res);
     }
@@ -84,32 +84,31 @@ exports.getMyOrder = async (req, res) => {
 
 // Get Single Order --- ADMIN
 exports.getSingleOrder = async (req, res) => {
-    try {
-      const order = await Order.findById(req.params.id).populate(
-        "user",
-        "name email"
-      );
-  
-      if (!order) {
-        return resError(404, "Order not found", res);
-      }
-  
-      return res.status(200).json({
-        success: true,
-        order,
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("user", "name email")
+      .populate({
+        path: "orderItems.product",
+        select: "name price",
       });
-    } catch (error) {
-      resError(500, `${error} => while getting order`, res);
+
+    if (!order) {
+      return resError(404, "Order not found", res);
     }
-  };
+
+    return res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    resError(500, `${error} => while getting order`, res);
+  }
+};
 
 // Get All Orders --- ADMIN
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate(
-        "user",
-        "name email"
-      );
+    const orders = await Order.find().populate("user", "name email");
 
     let totalAmount = 0;
 
@@ -124,5 +123,36 @@ exports.getAllOrders = async (req, res) => {
     });
   } catch (error) {
     resError(500, `${error}=>while getting orders`, res);
+  }
+};
+
+// Update Order Status --- ADMIN
+exports.updateOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    const productStatus = req.body.status;
+
+    console.lo;
+
+    if (order.orderStatus === "Delivered") {
+      return resError(404, "You have already delivered this order", res);
+    }
+
+    order.orderItems.forEach(async (order) => {
+      await updateStock(order.product, order.quantity, res);
+    });
+
+    order.orderStatus = productStatus;
+
+    if (productStatus === "Delivered") {
+      order.deliveredAt = Date.now();
+    }
+
+    await order.save({ validateBeforeSave: false });
+
+    return resSuccess(200, `Poduct status updated successfully to ${productStatus}`, res);
+  } catch (error) {
+    resError(500, `${error}=>while updating orders`, res);
   }
 };
