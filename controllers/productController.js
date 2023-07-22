@@ -161,7 +161,7 @@ exports.getAllReviews = async (req, res) => {
   }
 };
 
-// // Delete Product Review
+//Watch at 4:04:00 // Delete Product Review
 // exports.deleteReview = async (req, res) => {
 //   try {
 //     const product = await Product.findById(req.query.id);
