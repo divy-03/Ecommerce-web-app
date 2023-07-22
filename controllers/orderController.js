@@ -133,14 +133,16 @@ exports.updateOrder = async (req, res) => {
 
     const productStatus = req.body.status;
 
-    console.lo;
+    if (!order) {
+      return resError(404, "Order not found", res);
+    }
 
     if (order.orderStatus === "Delivered") {
       return resError(404, "You have already delivered this order", res);
     }
 
-    order.orderItems.forEach(async (order) => {
-      await updateStock(order.product, order.quantity, res);
+    order.orderItems.forEach(async (ordr) => {
+      await updateStock(ordr.product, ordr.quantity, res);
     });
 
     order.orderStatus = productStatus;
@@ -151,8 +153,29 @@ exports.updateOrder = async (req, res) => {
 
     await order.save({ validateBeforeSave: false });
 
-    return resSuccess(200, `Poduct status updated successfully to ${productStatus}`, res);
+    return resSuccess(
+      200,
+      `Poduct status updated successfully to ${productStatus}`,
+      res
+    );
   } catch (error) {
     resError(500, `${error}=>while updating orders`, res);
+  }
+};
+
+// Delete Order --- ADMIN
+exports.deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      resError(404, "Order not found", res);
+    }
+
+    await order.deleteOne();
+
+    return resSuccess(200, "Order deleted successfully", res);
+  } catch (error) {
+    resError(500, `${error}=>while deleting orders`, res);
   }
 };
