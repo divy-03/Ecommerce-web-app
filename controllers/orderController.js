@@ -39,26 +39,6 @@ exports.newOrder = async (req, res) => {
   }
 };
 
-// Get Single Order --- ADMIN
-exports.getSingleOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id).populate(
-      "user",
-      "name email"
-    );
-
-    if (!order) {
-      return resError(404, "Order not found", res);
-    }
-
-    return res.status(200).json({
-      success: true,
-      order,
-    });
-  } catch (error) {
-    resError(500, `${error} => while getting order`, res);
-  }
-};
 
 // Get all my Order
 exports.myOrders = async (req, res) => {
@@ -101,6 +81,27 @@ exports.getMyOrder = async (req, res) => {
     resError(500, `${error} => while getting order`, res);
   }
 };
+
+// Get Single Order --- ADMIN
+exports.getSingleOrder = async (req, res) => {
+    try {
+      const order = await Order.findById(req.params.id).populate(
+        "user",
+        "name email"
+      );
+  
+      if (!order) {
+        return resError(404, "Order not found", res);
+      }
+  
+      return res.status(200).json({
+        success: true,
+        order,
+      });
+    } catch (error) {
+      resError(500, `${error} => while getting order`, res);
+    }
+  };
 
 // Get All Orders --- ADMIN
 exports.getAllOrders = async (req, res) => {
