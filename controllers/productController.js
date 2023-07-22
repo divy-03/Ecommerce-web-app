@@ -142,3 +142,104 @@ exports.createReview = async (req, res, next) => {
     return resError(500, `${error} => while creating review`, res);
   }
 };
+
+// Get all Reviews
+exports.getAllReviews = async (req, res) => {
+  try {
+    const product = await Product.findById(req.query.id);
+
+    if (!product) {
+      return resError(404, "Product not found", res);
+    }
+
+    return res.status(200).json({
+      success: true,
+      reviews: product.reviews,
+    });
+  } catch (error) {
+    return resError(500, `${error} => while getting reviews`, res);
+  }
+};
+
+// // Delete Product Review
+// exports.deleteReview = async (req, res) => {
+//   try {
+//     const product = await Product.findById(req.query.id);
+
+//     if (!product) {
+//       return resError(404, "Product not found", res);
+//     }
+
+//     let avg = 0;
+//     product.reviews.forEach((rev) => {
+//       avg = avg + rev.rating;
+//     });
+
+//     const rating = avg / product.reviews.length;
+
+//     const numOfReviews = product.reviews.length;
+
+//     await Product.findByIdAndUpdate(
+//       req.query.reviewId,
+//       {
+//         reviews: product.reviews,
+//         rating,
+//         numOfReviews,
+//       },
+//       {
+//         new: true,
+//         runValidators: true,
+//         useFindandModify: false,
+//       }
+//     );
+
+//     return resSuccess(200, "Review deleted successfully", res);
+//   } catch (error) {
+//     return resError(500, `${error} => while deleting review`, res);
+//   }
+// };
+
+exports.deleteReview = async (req, res) => {
+  try {
+    const productId = req.query.id;
+    const reviewId = req.query.reviewId;
+
+    // Find the product by its ID
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return resError(404, "Product not found", res);
+    }
+
+    // Find the index of the review in the reviews array
+    const reviewIndex = product.reviews.findIndex(
+      (rev) => rev._id.toString() === reviewId
+    );
+
+    if (reviewIndex === -1) {
+      // If the review is not found, return an error response
+      return resError(404, "Review not found", res);
+    }
+
+    // Remove the review from the reviews array using $pull
+    product.reviews.pull({ _id: reviewId });
+
+    // Recalculate the average rating after removing the review
+    let avg = 0;
+    product.reviews.forEach((rev) => {
+      avg += rev.rating;
+    });
+    product.rating = avg / product.reviews.length;
+
+    // Update the number of reviews
+    product.numOfReviews = product.reviews.length;
+
+    // Save the updated product
+    await product.save({ validateBeforeSave: false });
+
+    // Return a success response
+    return resSuccess(200, "Review deleted successfully", res);
+  } catch (error) {
+    return resError(500, `${error} => while deleting review`, res);
+  }
+};

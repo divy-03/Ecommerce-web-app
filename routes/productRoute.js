@@ -6,6 +6,8 @@ const {
   deleteProduct,
   getProductDetails,
   createReview,
+  deleteReview,
+  getAllReviews,
 } = require("../controllers/productController");
 const { fetchUser, authRole } = require("../middleware/auth");
 const router = express.Router();
@@ -16,5 +18,7 @@ router.route("/admin/product/update/:id").put(fetchUser, authRole("admin", "owne
 router.route("/admin/product/delete/:id").delete(fetchUser, authRole("admin", "owner"), deleteProduct);
 router.route("/product/get/:id").get(getProductDetails);
 router.route("/review").put(fetchUser, createReview);
+router.route("/review").delete(fetchUser, deleteReview);
+router.route("/reviews").get(getAllReviews);
 
 module.exports = router;
