@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema({
-  shippingInfor: {
+  shippingInfo: {
     address: {
       type: String,
       required: true,
@@ -61,6 +61,11 @@ const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: "User",
+    required: true,
+  },
+
+  paymentMethod: {
+    type: String,
     required: true,
   },
 
